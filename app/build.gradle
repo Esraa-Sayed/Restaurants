@@ -1,18 +1,21 @@
 plugins {
     id 'com.android.application'
     id 'kotlin-android'
+    id 'kotlin-kapt'
+
+    id 'kotlin-parcelize'
 }
 
 android {
-    compileSdk 32
-
+    compileSdkVersion Android.compileSDK
+    buildToolsVersion "30.0.3"
     defaultConfig {
-        applicationId "com.esraa.restaurants"
-        minSdk 27
-        targetSdk 32
-        versionCode 1
-        versionName "1.0"
-
+        applicationId Android.applicationId
+        minSdk Android.minSDK
+        targetSdk Android.targetSDK
+        versionCode Android.versionCode
+        versionName Android.versionName
+        multiDexEnabled true
         testInstrumentationRunner "androidx.test.runner.AndroidJUnitRunner"
     }
 
@@ -29,15 +32,45 @@ android {
     kotlinOptions {
         jvmTarget = '1.8'
     }
+
+    buildFeatures {
+        viewBinding true
+    }
+    def localProperties = new Properties()
+    localProperties.load(new FileInputStream("local.properties"))
+
+    buildTypes{
+        debug{
+            resValue("string","Map_API_KEY",localProperties['Map_API_KEY'])
+        }
+    }
 }
 
 dependencies {
 
-    implementation 'androidx.core:core-ktx:1.8.0'
-    implementation 'androidx.appcompat:appcompat:1.4.2'
-    implementation 'com.google.android.material:material:1.6.1'
-    implementation 'androidx.constraintlayout:constraintlayout:2.1.4'
-    testImplementation 'junit:junit:4.+'
-    androidTestImplementation 'androidx.test.ext:junit:1.1.3'
-    androidTestImplementation 'androidx.test.espresso:espresso-core:3.4.0'
+    implementation Libs.kotlinStdLib
+    implementation Libs.coreExt
+    implementation Libs.appCompat
+    implementation Libs.material
+    implementation Libs.constraintLayout
+    implementation Libs.googleMap
+    implementation Libs.locationServices
+    implementation Libs.permissionsDispatcher
+    kapt Libs.permissionsDispatcherProcessor
+    implementation Libs.timber
+    implementation Libs.hiltAndroid
+    kapt Libs.hiltAndroidCompiler
+    implementation Libs.rxVersion
+    implementation Libs.rxAndroid
+    implementation Libs.retrofit
+    implementation Libs.gson
+    implementation Libs.gsonConverter
+    implementation Libs.rxAdapter
+    implementation Libs.loggingInterceptor
+    implementation Libs.fragmentKtx
+    implementation Libs.multidex
+    //test libs
+    testImplementation TestLibs.junit
+    androidTestImplementation TestLibs.junit
+    androidTestImplementation TestLibs.espresso
 }
