@@ -2,7 +2,7 @@ plugins {
     id 'com.android.application'
     id 'kotlin-android'
     id 'kotlin-kapt'
-
+    id 'dagger.hilt.android.plugin'
     id 'kotlin-parcelize'
 }
 
@@ -56,6 +56,7 @@ dependencies {
     implementation Libs.googleMap
     implementation Libs.locationServices
     implementation Libs.permissionsDispatcher
+    implementation 'androidx.legacy:legacy-support-v4:1.0.0'
     kapt Libs.permissionsDispatcherProcessor
     implementation Libs.timber
     implementation Libs.hiltAndroid

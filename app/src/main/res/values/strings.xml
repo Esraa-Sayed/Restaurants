@@ -1,3 +1,13 @@
 <resources>
     <string name="app_name">Restaurants</string>
+    <string name="Location_not_enabled">Location not enabled</string>
+    <string name="Please_enable_your_location">Please, enable your location</string>
+    <string name="Enable">Enable</string>
+    <string name="Deny">Deny</string>
+    <string name="Location_denied">Location denied</string>
+    <!-- TODO: Remove or change this placeholder text -->
+    <string name="hello_blank_fragment">Hello blank fragment</string>
+    <string name="name">Name:</string>
+    <string name="city">City:</string>
+    <string name="address">Address:</string>
 </resources>
