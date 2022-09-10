@@ -26,7 +26,7 @@ object Versions {
     val FRAGMENT_KTX = "1.2.5"
     val RX_RETROFIT_ADAPTER = "2.6.1"
     val RETROFIT_VERSION = "2.7.1"
-    val OKHTTP_LOGGING_INTERCEPTOR_VERSION = "3.12.1"
+    val OKHTTP_LOGGING_INTERCEPTOR_VERSION = "4.9.1"
     val GSON_CONVERTER = "2.6.1"
     val ESPRESSO = "3.1.0"
     val GOOGLE_MAP = "17.0.0"

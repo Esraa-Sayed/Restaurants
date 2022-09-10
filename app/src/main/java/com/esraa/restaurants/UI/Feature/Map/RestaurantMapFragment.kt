@@ -12,10 +12,17 @@ import android.view.View
 import android.view.ViewGroup
 import android.widget.Toast
 import androidx.activity.result.contract.ActivityResultContracts
+import androidx.fragment.app.viewModels
+import androidx.lifecycle.LifecycleOwner
 import com.esraa.restaurants.Core.Common.BaseFragment
+import com.esraa.restaurants.Core.Common.DataState
 import com.esraa.restaurants.Core.Navigation.AppNavigator
 import com.esraa.restaurants.Core.Navigation.Screen
+import com.esraa.restaurants.Domain.Entity.Restaurant
+import com.esraa.restaurants.Domain.Error.Failure
+import com.esraa.restaurants.Domain.dto.LocationDto
 import com.esraa.restaurants.R
+import com.esraa.restaurants.databinding.FragmentRestaurantMapBinding
 
 import com.google.android.gms.maps.CameraUpdateFactory
 import com.google.android.gms.maps.GoogleMap
@@ -25,6 +32,7 @@ import com.google.android.gms.maps.model.LatLng
 import com.google.android.gms.maps.model.Marker
 import com.google.android.gms.maps.model.MarkerOptions
 import com.google.android.material.dialog.MaterialAlertDialogBuilder
+import com.google.android.material.snackbar.Snackbar
 import dagger.hilt.android.AndroidEntryPoint
 import permissions.dispatcher.*
 import timber.log.Timber
@@ -34,12 +42,39 @@ import javax.inject.Inject
 @AndroidEntryPoint
 class RestaurantMapFragment : BaseFragment(),GoogleMap.OnMarkerClickListener {
 @Inject lateinit var appNavigator: AppNavigator
+private val mapViewModel:MapViewModel by viewModels()
+    private var googleMap:GoogleMap? = null
+    private var _binding:FragmentRestaurantMapBinding? = null
     private val callback = OnMapReadyCallback { googleMap ->
-        val sydney = LatLng(-34.0, 151.0)
-        googleMap.addMarker(MarkerOptions().position(sydney).title("Marker in Sydney"))
-        googleMap.moveCamera(CameraUpdateFactory.newLatLng(sydney))
+       this.googleMap = googleMap
         googleMap.setOnMarkerClickListener(this)
+        googleMap.setMinZoomPreference(12f)
+        observerRestaurants()
+
     }
+
+    private fun observerRestaurants() {
+        mapViewModel.restaurantState.observe(viewLifecycleOwner, {
+            when(it){
+                is DataState.Error -> {
+                    handleLoading(false)
+                    if(it.error is Failure.NetworkConnection)
+                        displayError(getString(R.string.Network_connection_error))
+                    else
+                        displayError(getString(R.string.generalError))
+
+                }
+                is DataState.Loading -> {
+                    handleLoading(true)
+                }
+                is DataState.Success -> {
+                    handleLoading(false)
+                    renderMarkers(it.data)
+                }
+            }
+        })
+    }
+
     private val localSettingScreen = registerForActivityResult(ActivityResultContracts.StartActivityForResult()){
         getCurrentLocation()
     }
@@ -51,7 +86,8 @@ class RestaurantMapFragment : BaseFragment(),GoogleMap.OnMarkerClickListener {
         container: ViewGroup?,
         savedInstanceState: Bundle?
     ): View? {
-        return inflater.inflate(R.layout.fragment_restaurant_map, container, false)
+        _binding = FragmentRestaurantMapBinding.inflate(inflater,container,false)
+        return _binding!!.root
     }
 
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
@@ -66,6 +102,9 @@ class RestaurantMapFragment : BaseFragment(),GoogleMap.OnMarkerClickListener {
         if (isLocationEnabled()){
             getLastKnownLocation {
                 Timber.e("Available lat , long : %s,%s",it.latitude,it.longitude)
+                //call foursquare api to get restaurants
+                //mapViewModel.getRestaurantsFun(LocationDto(it.latitude,it.longitude))
+                  mapViewModel.getRestaurantsFun(LocationDto(29.8579334,31.3107331))
             }
         }else{
             MaterialAlertDialogBuilder(getRootActivity())
@@ -128,6 +167,23 @@ class RestaurantMapFragment : BaseFragment(),GoogleMap.OnMarkerClickListener {
     override fun onMarkerClick(p0: Marker?): Boolean {
         appNavigator.navigateTo(Screen.RESTAURANT)
         return false
+    }
+    private fun renderMarkers(venus:List<Restaurant>){
+        venus.forEach {
+            venue ->
+            val loc = LatLng(venue.latitude,venue.longitude)
+            googleMap?.addMarker(MarkerOptions().position(loc).title(venue.name))
+            googleMap?.moveCamera(CameraUpdateFactory.newLatLng(loc))
+        }
+    }
+    private fun handleLoading(isLoading:Boolean){
+        _binding!!.progressBar.visibility = if (isLoading) View.VISIBLE else View.GONE
+    }
+    private fun displayError(message:String){
+        message?.let {
+            Snackbar.make(_binding!!.parentLayout,message,Snackbar.LENGTH_SHORT).show()
+        }
+
     }
     //MARK end
 }

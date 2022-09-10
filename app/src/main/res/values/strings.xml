@@ -10,4 +10,6 @@
     <string name="name">Name:</string>
     <string name="city">City:</string>
     <string name="address">Address:</string>
+    <string name="Network_connection_error">Network connection Error</string>
+    <string name="generalError">something went wrong</string>
 </resources>

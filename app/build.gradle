@@ -42,8 +42,12 @@ android {
     buildTypes{
         debug{
             resValue("string","Map_API_KEY",localProperties['Map_API_KEY'])
+            resValue("string","foursquare_client_id",localProperties['Client_ID'])
+            resValue("string","foursquare_client_secret",localProperties['Client_Secret'])
+            resValue("string","Restaurants_API_KEY",localProperties['Restaurants_API_KEY'])
         }
     }
+
 }
 
 dependencies {
