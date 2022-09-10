@@ -3,7 +3,6 @@ package com.esraa.restaurants.UI.Feature.Map
 import android.Manifest
 import android.content.Intent
 import android.net.Uri
-import androidx.fragment.app.Fragment
 
 import android.os.Bundle
 import android.provider.Settings
@@ -13,15 +12,15 @@ import android.view.ViewGroup
 import android.widget.Toast
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.fragment.app.viewModels
-import androidx.lifecycle.LifecycleOwner
 import com.esraa.restaurants.Core.Common.BaseFragment
 import com.esraa.restaurants.Core.Common.DataState
 import com.esraa.restaurants.Core.Navigation.AppNavigator
 import com.esraa.restaurants.Core.Navigation.Screen
 import com.esraa.restaurants.Domain.Entity.Restaurant
 import com.esraa.restaurants.Domain.Error.Failure
-import com.esraa.restaurants.Domain.dto.LocationDto
+import com.esraa.restaurants.Domain.dto.RequestDto
 import com.esraa.restaurants.R
+import com.esraa.restaurants.UI.Feature.Map.drag.IDragCallback
 import com.esraa.restaurants.databinding.FragmentRestaurantMapBinding
 
 import com.google.android.gms.maps.CameraUpdateFactory
@@ -40,19 +39,29 @@ import javax.inject.Inject
 
 @RuntimePermissions
 @AndroidEntryPoint
-class RestaurantMapFragment : BaseFragment(),GoogleMap.OnMarkerClickListener {
+class RestaurantMapFragment : BaseFragment(),GoogleMap.OnMarkerClickListener,IDragCallback {
 @Inject lateinit var appNavigator: AppNavigator
 private val mapViewModel:MapViewModel by viewModels()
     private var googleMap:GoogleMap? = null
     private var _binding:FragmentRestaurantMapBinding? = null
+
     private val callback = OnMapReadyCallback { googleMap ->
        this.googleMap = googleMap
         googleMap.setOnMarkerClickListener(this)
-        googleMap.setMinZoomPreference(12f)
+        googleMap.setMinZoomPreference(15f)
         observerRestaurants()
 
     }
-
+    override fun onCreateView(
+        inflater: LayoutInflater,
+        container: ViewGroup?,
+        savedInstanceState: Bundle?
+    ): View? {
+        _binding = FragmentRestaurantMapBinding.inflate(inflater,container,false)
+        _binding?.draggableLayout?.setDrag(this)
+        mapViewModel.fragmentRecreated = (savedInstanceState != null)
+        return _binding!!.root
+    }
     private fun observerRestaurants() {
         mapViewModel.restaurantState.observe(viewLifecycleOwner, {
             when(it){
@@ -81,14 +90,7 @@ private val mapViewModel:MapViewModel by viewModels()
     private val applicationSettingsScreen = registerForActivityResult(ActivityResultContracts.StartActivityForResult()){
         getCurrentLocation()
     }
-    override fun onCreateView(
-        inflater: LayoutInflater,
-        container: ViewGroup?,
-        savedInstanceState: Bundle?
-    ): View? {
-        _binding = FragmentRestaurantMapBinding.inflate(inflater,container,false)
-        return _binding!!.root
-    }
+
 
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
@@ -103,8 +105,11 @@ private val mapViewModel:MapViewModel by viewModels()
             getLastKnownLocation {
                 Timber.e("Available lat , long : %s,%s",it.latitude,it.longitude)
                 //call foursquare api to get restaurants
-                //mapViewModel.getRestaurantsFun(LocationDto(it.latitude,it.longitude))
-                  mapViewModel.getRestaurantsFun(LocationDto(29.8579334,31.3107331))
+                val currentLatLng = LatLng(it.latitude,it.longitude)
+                val currentBound = googleMap?.projection?.visibleRegion?.latLngBounds
+                if(currentBound != null && currentLatLng != null)
+                    mapViewModel.getRestaurantsFun(RequestDto(currentLatLng,currentBound))
+                 // mapViewModel.getRestaurantsFun(LocationDto(29.8579334,31.3107331))
             }
         }else{
             MaterialAlertDialogBuilder(getRootActivity())
@@ -164,16 +169,30 @@ private val mapViewModel:MapViewModel by viewModels()
         this.onRequestPermissionsResult(requestCode,grantResults)
     }
 
-    override fun onMarkerClick(p0: Marker?): Boolean {
-        appNavigator.navigateTo(Screen.RESTAURANT)
+    override fun onMarkerClick(marker: Marker?): Boolean {
+        val restaurant = mapViewModel.markers[marker]
+        appNavigator.navigateTo(Screen.RESTAURANT,restaurant)
         return false
     }
     private fun renderMarkers(venus:List<Restaurant>){
-        venus.forEach {
+      //  googleMap?.clear()
+        val newVenus = mapViewModel.getNewRestaurants(venus)
+        newVenus.forEach {
             venue ->
             val loc = LatLng(venue.latitude,venue.longitude)
-            googleMap?.addMarker(MarkerOptions().position(loc).title(venue.name))
+            val marker = googleMap?.addMarker(MarkerOptions().position(loc).title(venue.name))
             googleMap?.moveCamera(CameraUpdateFactory.newLatLng(loc))
+            if(marker != null){
+                mapViewModel.markers[marker] = venue
+            }
+        }
+        if (newVenus.isEmpty() && mapViewModel.fragmentRecreated){
+            mapViewModel.markers.values.forEach{
+                    venue ->
+                val loc = LatLng(venue.latitude,venue.longitude)
+                googleMap?.addMarker(MarkerOptions().position(loc).title(venue.name))
+                googleMap?.moveCamera(CameraUpdateFactory.newLatLng(loc))
+            }
         }
     }
     private fun handleLoading(isLoading:Boolean){
@@ -185,5 +204,19 @@ private val mapViewModel:MapViewModel by viewModels()
         }
 
     }
+
+    override fun onDrag() {
+        Timber.e("Drag Here")
+        if (mapViewModel.fragmentRecreated)
+            mapViewModel.fragmentRecreated = false
+        val currentLatLng = googleMap?.cameraPosition?.target
+        Timber.e("Available lat , long : %s,%s",currentLatLng?.latitude,currentLatLng?.longitude)
+        val currentBounds = googleMap?.projection?.visibleRegion?.latLngBounds
+        mapViewModel.restRestaurantState()
+        if(currentBounds != null && currentLatLng != null){
+            mapViewModel.getRestaurantsFun(RequestDto(currentLatLng,currentBounds))
+        }
+    }
+
     //MARK end
 }

@@ -4,8 +4,8 @@
     <option name="filePathToZoomLevelMap">
       <map>
         <entry key="..\:/My Achievements/RestaurantsProject/app/src/main/res/layout/activity_main.xml" value="0.25416666666666665" />
-        <entry key="..\:/My Achievements/RestaurantsProject/app/src/main/res/layout/fragment_restaurant_details.xml" value="0.4" />
-        <entry key="..\:/My Achievements/RestaurantsProject/app/src/main/res/layout/fragment_restaurant_map.xml" value="0.1" />
+        <entry key="..\:/My Achievements/RestaurantsProject/app/src/main/res/layout/fragment_restaurant_details.xml" value="0.176" />
+        <entry key="..\:/My Achievements/RestaurantsProject/app/src/main/res/layout/fragment_restaurant_map.xml" value="0.25" />
       </map>
     </option>
   </component>
