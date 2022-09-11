@@ -1,14 +1,6 @@
 # Restaurants
 
 It is an Android Application that shows all restaurants on the app and the details of them 
-<p align="center">
-
-
-https://user-images.githubusercontent.com/53404081/176023405-1d13bed5-9d12-432a-9589-7a1537771a2a.mp4
-
-
-
-</p>
 
 ## Project functionality:
   * Kotlin
