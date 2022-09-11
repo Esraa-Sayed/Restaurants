@@ -27,6 +27,7 @@ import com.google.android.gms.maps.CameraUpdateFactory
 import com.google.android.gms.maps.GoogleMap
 import com.google.android.gms.maps.OnMapReadyCallback
 import com.google.android.gms.maps.SupportMapFragment
+import com.google.android.gms.maps.model.BitmapDescriptorFactory
 import com.google.android.gms.maps.model.LatLng
 import com.google.android.gms.maps.model.Marker
 import com.google.android.gms.maps.model.MarkerOptions
@@ -48,7 +49,7 @@ private val mapViewModel:MapViewModel by viewModels()
     private val callback = OnMapReadyCallback { googleMap ->
        this.googleMap = googleMap
         googleMap.setOnMarkerClickListener(this)
-        googleMap.setMinZoomPreference(15f)
+        googleMap.setMinZoomPreference(12f)
         observerRestaurants()
 
     }
@@ -175,13 +176,16 @@ private val mapViewModel:MapViewModel by viewModels()
         return false
     }
     private fun renderMarkers(venus:List<Restaurant>){
-      //  googleMap?.clear()
+        googleMap?.clear()
         val newVenus = mapViewModel.getNewRestaurants(venus)
         newVenus.forEach {
             venue ->
             val loc = LatLng(venue.latitude,venue.longitude)
-            val marker = googleMap?.addMarker(MarkerOptions().position(loc).title(venue.name))
+            val markerOption = MarkerOptions().position(loc).title(venue.name)
+            markerOption.icon(BitmapDescriptorFactory.fromResource(R.drawable.marker_icon))
+            val marker =googleMap?.addMarker(markerOption)
             googleMap?.moveCamera(CameraUpdateFactory.newLatLng(loc))
+            //googleMap?.addMarker(MarkerOptions().position(loc).title(venue.name))
             if(marker != null){
                 mapViewModel.markers[marker] = venue
             }
@@ -190,7 +194,9 @@ private val mapViewModel:MapViewModel by viewModels()
             mapViewModel.markers.values.forEach{
                     venue ->
                 val loc = LatLng(venue.latitude,venue.longitude)
-                googleMap?.addMarker(MarkerOptions().position(loc).title(venue.name))
+                val markerOption = MarkerOptions().position(loc).title(venue.name)
+                markerOption.icon(BitmapDescriptorFactory.fromResource(R.drawable.marker_icon))
+                googleMap?.addMarker(markerOption)
                 googleMap?.moveCamera(CameraUpdateFactory.newLatLng(loc))
             }
         }
